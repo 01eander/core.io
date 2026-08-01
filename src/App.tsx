@@ -16,7 +16,7 @@ import ParentDashboard from './features/parent/components/ParentDashboard';
 
 function App() {
   const [userRole, setUserRole] = useState<'guest' | 'admin' | 'student' | 'parent'>('guest');
-  const [currentView, setCurrentView] = useState('settings'); // Admin view
+  const [currentView, setCurrentView] = useState('stays'); // Admin view
   const [studentView, setStudentView] = useState('home'); // Student tab
   const [parentView, setParentView] = useState('home'); // Parent tab
 

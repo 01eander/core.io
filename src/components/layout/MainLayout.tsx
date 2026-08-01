@@ -10,7 +10,9 @@ import {
   Plus,
   Database,
   Banknote,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -34,32 +36,55 @@ const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any
 );
 
 export default function MainLayout({ children, currentView, setCurrentView, onLogout }: MainLayoutProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const handleNav = (view: string) => {
+    setCurrentView(view);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       
+      {/* Sidebar Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Estilo SaaS Premium */}
-      <aside className="w-72 bg-slate-950 flex flex-col hidden md:flex border-r border-slate-800">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-bold text-xl leading-none">C</span>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 flex flex-col border-r border-slate-800 transition-transform duration-300 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <span className="text-white font-bold text-xl leading-none">C</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">Core<span className="text-indigo-400">.io</span></span>
           </div>
-          <span className="text-xl font-bold text-white tracking-tight">Core<span className="text-indigo-400">.io</span></span>
+          <button 
+            className="md:hidden text-slate-400 hover:text-white"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <X size={24} />
+          </button>
         </div>
         
         <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
           Principal
         </div>
         <nav className="flex-1 px-3 space-y-1.5 mt-2 overflow-y-auto hide-scrollbar pb-4">
-          <SidebarItem icon={Clock} label="Control de Estancias" active={currentView === 'stays'} onClick={() => setCurrentView('stays')} />
-          <SidebarItem icon={Banknote} label="Caja y Cobranza" active={currentView === 'billing'} onClick={() => setCurrentView('billing')} />
-          <SidebarItem icon={Users} label="Directorio de Niños" active={currentView === 'children'} onClick={() => setCurrentView('children')} />
-          <SidebarItem icon={Package} label="Inventario y Cafetería" active={currentView === 'inventory'} onClick={() => setCurrentView('inventory')} />
-          <SidebarItem icon={PieChart} label="Reportes Financieros" active={currentView === 'reports'} onClick={() => setCurrentView('reports')} />
+          <SidebarItem icon={Clock} label="Control de Estancias" active={currentView === 'stays'} onClick={() => handleNav('stays')} />
+          <SidebarItem icon={Banknote} label="Caja y Cobranza" active={currentView === 'billing'} onClick={() => handleNav('billing')} />
+          <SidebarItem icon={Users} label="Directorio de Niños" active={currentView === 'children'} onClick={() => handleNav('children')} />
+          <SidebarItem icon={Package} label="Inventario y Cafetería" active={currentView === 'inventory'} onClick={() => handleNav('inventory')} />
+          <SidebarItem icon={PieChart} label="Reportes Financieros" active={currentView === 'reports'} onClick={() => handleNav('reports')} />
           
           <div className="mt-6 mb-2 px-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Configuración
           </div>
-          <SidebarItem icon={Database} label="Catálogos del Sistema" active={currentView === 'catalogs'} onClick={() => setCurrentView('catalogs')} />
+          <SidebarItem icon={Database} label="Catálogos del Sistema" active={currentView === 'catalogs'} onClick={() => handleNav('catalogs')} />
         </nav>
 
         <div className="mt-auto px-6 py-2 flex justify-center">
@@ -82,7 +107,7 @@ export default function MainLayout({ children, currentView, setCurrentView, onLo
             </button>
           </div>
           <div className="pt-1 border-t border-slate-800">
-            <SidebarItem icon={Settings} label="Ajustes de Cuenta" active={currentView === 'settings'} onClick={() => setCurrentView('settings')} />
+            <SidebarItem icon={Settings} label="Ajustes de Cuenta" active={currentView === 'settings'} onClick={() => handleNav('settings')} />
           </div>
         </div>
       </aside>
@@ -91,25 +116,33 @@ export default function MainLayout({ children, currentView, setCurrentView, onLo
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         
         {/* Topbar */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center bg-slate-100 rounded-full px-4 py-2 w-96 border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-            <Search size={18} className="text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar niño, tutor o folio..." 
-              className="bg-transparent border-none outline-none ml-3 w-full text-sm text-slate-700 placeholder:text-slate-400"
-            />
+        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <button 
+              className="md:hidden text-slate-600 hover:bg-slate-100 p-2 rounded-lg"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center bg-slate-100 rounded-full px-4 py-2 w-full max-w-md border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+              <Search size={18} className="text-slate-400 shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Buscar niño, tutor o folio..." 
+                className="bg-transparent border-none outline-none ml-3 w-full text-sm text-slate-700 placeholder:text-slate-400"
+              />
+            </div>
           </div>
           
-          <div className="flex items-center gap-5">
-            <button className="relative text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+          <div className="flex items-center gap-3 md:gap-5 shrink-0">
+            <button className="relative text-slate-400 hover:text-slate-600 transition-colors cursor-pointer hidden md:block">
               <Bell size={22} />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="h-8 w-px bg-slate-200"></div>
-            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-md shadow-indigo-200 transition-all cursor-pointer hover:-translate-y-0.5">
+            <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
+            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-full text-sm font-bold shadow-md shadow-indigo-200 transition-all cursor-pointer hover:-translate-y-0.5">
               <Plus size={18} />
-              Nuevo Ingreso
+              <span className="hidden md:inline">Nuevo Ingreso</span>
             </button>
           </div>
         </header>
