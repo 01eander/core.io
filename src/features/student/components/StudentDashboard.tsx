@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, Wallet, Flame, ChevronRight, Target, Award, Zap, BookOpen, X, CheckCircle2, User, UploadCloud, Clock, ShoppingBag, Heart, Search, AlertCircle, Shield } from 'lucide-react';
+import { QrCode, Wallet, Flame, ChevronRight, Target, Award, Zap, BookOpen, X, CheckCircle2, User, UploadCloud, Clock, ShoppingBag, Heart, Search, AlertCircle, Shield, CreditCard, Building } from 'lucide-react';
 
 export default function StudentDashboard({ currentTab = 'home' }: { currentTab?: string }) {
   const [balance, setBalance] = useState(450);
@@ -9,12 +9,23 @@ export default function StudentDashboard({ currentTab = 'home' }: { currentTab?:
   const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
-  const handleTopup = () => {
-    setShowTopupModal(true);
+  const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit' | 'transfer' | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  const handleTopupSubmit = () => {
+    if (!paymentMethod) return;
+    setIsProcessing(true);
     setTimeout(() => {
-      setBalance(b => b + 200);
-      setTimeout(() => setShowTopupModal(false), 2000);
-    }, 800);
+      setIsProcessing(false);
+      setPaymentSuccess(true);
+      setTimeout(() => {
+        setBalance(b => b + 200);
+        setShowTopupModal(false);
+        setPaymentSuccess(false);
+        setPaymentMethod(null);
+      }, 2000);
+    }, 1500);
   };
 
   const handlePayment = () => {
@@ -77,42 +88,34 @@ export default function StudentDashboard({ currentTab = 'home' }: { currentTab?:
           <span className="text-indigo-200 font-semibold text-sm">Core Wallet</span>
         </div>
         <button 
-          onClick={handleTopup}
-          disabled={showTopupModal}
-          className="bg-white/20 hover:bg-white/30 transition-colors px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm cursor-pointer disabled:opacity-50"
+          onClick={() => setShowTopupModal(true)}
+          className="bg-white/20 hover:bg-white/30 transition-colors px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm cursor-pointer"
         >
           Recargar
         </button>
       </div>
       
-      {showTopupModal ? (
-          <div className="h-24 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
-            <CheckCircle2 size={32} className="text-emerald-400 mb-2 animate-bounce" />
-            <p className="text-sm font-bold text-white">¡Recarga de $200 Exitosa!</p>
-          </div>
-      ) : (
-        <div className="animate-in fade-in duration-300">
-          <h2 className="text-4xl font-black tracking-tighter mb-4">
-            ${Math.floor(balance)}.<span className="text-indigo-300 text-2xl">00</span>
-          </h2>
-          
-          <button 
-            onClick={() => setShowQrModal(true)}
-            className="w-full bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10 flex justify-between items-center cursor-pointer hover:bg-black/30 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
-                <QrCode size={14} />
-              </div>
-              <div>
-                <p className="font-bold text-sm leading-tight">Pagar en Cafetería</p>
-                <p className="text-[10px] text-indigo-200">Generar código de 1 solo uso</p>
-              </div>
+      <div className="animate-in fade-in duration-300">
+        <h2 className="text-4xl font-black tracking-tighter mb-4">
+          ${Math.floor(balance)}.<span className="text-indigo-300 text-2xl">00</span>
+        </h2>
+        
+        <button 
+          onClick={() => setShowQrModal(true)}
+          className="w-full bg-black/20 rounded-xl p-3 backdrop-blur-sm border border-white/10 flex justify-between items-center cursor-pointer hover:bg-black/30 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+              <QrCode size={14} />
             </div>
-            <ChevronRight size={16} className="text-indigo-300" />
-          </button>
-        </div>
-      )}
+            <div>
+              <p className="font-bold text-sm leading-tight">Pagar en Cafetería</p>
+              <p className="text-[10px] text-indigo-200">Generar código de 1 solo uso</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-indigo-300" />
+        </button>
+      </div>
     </div>
   );
 
@@ -596,6 +599,113 @@ export default function StudentDashboard({ currentTab = 'home' }: { currentTab?:
                 Simular Cobro (-$45.00)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Topup Payment Modal */}
+      {showTopupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto hide-scrollbar">
+            {!isProcessing && !paymentSuccess && (
+              <button 
+                onClick={() => { setShowTopupModal(false); setPaymentMethod(null); }}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center hover:text-white cursor-pointer transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+
+            {isProcessing ? (
+              <div className="text-center py-12 flex flex-col items-center">
+                <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                <h3 className="text-xl font-bold text-white">Procesando Pago...</h3>
+                <p className="text-slate-400 text-sm mt-2">Por favor no cierres esta ventana</p>
+              </div>
+            ) : paymentSuccess ? (
+              <div className="text-center py-12 flex flex-col items-center animate-in zoom-in">
+                <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 size={40} className="text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">¡Recarga Exitosa!</h3>
+                <p className="text-slate-400 text-sm mt-2">Tu saldo se ha actualizado en +$200.00.</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-6 mt-2">
+                  <h3 className="text-xl font-bold text-white mb-1">Recargar Wallet</h3>
+                  <p className="text-sm text-slate-400">Total a recargar: <span className="text-white font-bold">$200.00</span></p>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <button 
+                    onClick={() => setPaymentMethod('credit')}
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer ${paymentMethod === 'credit' ? 'bg-indigo-600/20 border-indigo-500' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800'}`}
+                  >
+                    <div className={`p-2 rounded-lg ${paymentMethod === 'credit' ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                      <CreditCard size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-white text-sm">Tarjeta de Crédito</p>
+                      <p className="text-xs text-slate-400">Visa, Mastercard, Amex</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setPaymentMethod('debit')}
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer ${paymentMethod === 'debit' ? 'bg-indigo-600/20 border-indigo-500' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800'}`}
+                  >
+                    <div className={`p-2 rounded-lg ${paymentMethod === 'debit' ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                      <CreditCard size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-white text-sm">Tarjeta de Débito</p>
+                      <p className="text-xs text-slate-400">Pagos al instante</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setPaymentMethod('transfer')}
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer ${paymentMethod === 'transfer' ? 'bg-indigo-600/20 border-indigo-500' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800'}`}
+                  >
+                    <div className={`p-2 rounded-lg ${paymentMethod === 'transfer' ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                      <Building size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-white text-sm">Transferencia SPEI</p>
+                      <p className="text-xs text-slate-400">Sin comisiones</p>
+                    </div>
+                  </button>
+                </div>
+
+                {(paymentMethod === 'credit' || paymentMethod === 'debit') && (
+                  <div className="space-y-4 mb-6 animate-in fade-in slide-in-from-bottom-2">
+                    <input type="text" placeholder="Número de Tarjeta" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 outline-none" />
+                    <div className="flex gap-4">
+                      <input type="text" placeholder="MM/AA" className="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 outline-none" />
+                      <input type="text" placeholder="CVC" className="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 outline-none" />
+                    </div>
+                  </div>
+                )}
+
+                {paymentMethod === 'transfer' && (
+                  <div className="mb-6 bg-slate-950 border border-slate-800 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2 text-center">
+                     <p className="text-xs text-slate-500 mb-1">CLABE Interbancaria (STP)</p>
+                     <p className="text-white font-mono font-bold tracking-widest mb-3">646 180 1234 5678 9012</p>
+                     <p className="text-xs text-slate-500 mb-1">Referencia</p>
+                     <p className="text-white font-mono font-bold tracking-widest">ALUMNO-491</p>
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleTopupSubmit}
+                  disabled={!paymentMethod}
+                  className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white rounded-xl font-bold transition-colors cursor-pointer shadow-lg shadow-indigo-900/30"
+                >
+                  {paymentMethod === 'transfer' ? 'Ya hice la transferencia' : 'Confirmar Recarga'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

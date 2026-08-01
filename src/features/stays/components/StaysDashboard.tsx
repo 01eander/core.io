@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Coffee, LogOut, Plus, ChevronRight, CarFront, Wallet, CheckCircle2, ShieldAlert, LayoutGrid, List, Filter, Phone } from 'lucide-react';
+import { Clock, Coffee, LogOut, Plus, ChevronRight, CarFront, Wallet, CheckCircle2, ShieldAlert, LayoutGrid, List, Filter, Phone, X, ShieldCheck } from 'lucide-react';
 
 interface Stay {
   id: string;
@@ -20,7 +20,22 @@ const mockStays: Stay[] = [
   { id: '4', childName: 'Valentina Silva', tutorName: 'Jorge Silva', entryTime: new Date(Date.now() - 1000 * 60 * 125), packageType: 'Por hora', pickupStatus: 'arrived', walletBalance: 1200.00, grade: 'Kínder' },
 ];
 
-const StayCard = ({ stay }: { stay: Stay }) => {
+interface AuthorizedPerson {
+  id: string;
+  name: string;
+  relation: string;
+  idNumber: string;
+  avatarIcon: string;
+}
+
+const mockAuthorizedPeople: AuthorizedPerson[] = [
+  { id: 'p1', name: 'Jorge Silva', relation: 'Padre', idNumber: 'INE: SIVJ8509...', avatarIcon: '👨' },
+  { id: 'p2', name: 'Laura Gómez', relation: 'Madre', idNumber: 'INE: GOML8701...', avatarIcon: '👩' },
+  { id: 'p3', name: 'Roberto Silva', relation: 'Abuelo', idNumber: 'INE: SIVR5503...', avatarIcon: '👴' },
+  { id: 'p4', name: 'Marta Pérez', relation: 'Tía', idNumber: 'INE: PERM9004...', avatarIcon: '👩‍🦰' },
+];
+
+const StayCard = ({ stay, onPickup }: { stay: Stay, onPickup: (stay: Stay) => void }) => {
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
   const [isCalling, setIsCalling] = useState(false);
@@ -164,7 +179,9 @@ const StayCard = ({ stay }: { stay: Stay }) => {
           </div>
         )}
 
-        <button className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer ${
+        <button 
+          onClick={() => onPickup(stay)}
+          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer ${
           isArrived ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' :
           isAlert ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 
           'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
@@ -181,6 +198,20 @@ export default function StaysDashboard() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterGrade, setFilterGrade] = useState('Todos los Grados');
   const [filterStatus, setFilterStatus] = useState('Todos los Estados');
+  
+  const [selectedStayForPickup, setSelectedStayForPickup] = useState<Stay | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<AuthorizedPerson | null>(null);
+  const [pickupSuccess, setPickupSuccess] = useState(false);
+
+  const handleConfirmPickup = () => {
+    if (!selectedPerson) return;
+    setPickupSuccess(true);
+    setTimeout(() => {
+      setPickupSuccess(false);
+      setSelectedStayForPickup(null);
+      setSelectedPerson(null);
+    }, 2000);
+  };
 
   // Filtrado simple para demostración
   const filteredStays = mockStays.filter(stay => {
@@ -253,7 +284,7 @@ export default function StaysDashboard() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredStays.map((stay) => (
-            <StayCard key={stay.id} stay={stay} />
+            <StayCard key={stay.id} stay={stay} onPickup={(s) => setSelectedStayForPickup(s)} />
           ))}
           
           <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 flex flex-col items-center justify-center p-6 text-slate-400 hover:bg-slate-100 hover:border-indigo-300 hover:text-indigo-600 transition-all cursor-pointer min-h-[300px]">
@@ -296,6 +327,83 @@ export default function StaysDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Verification Modal */}
+      {selectedStayForPickup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {!pickupSuccess && (
+              <button 
+                onClick={() => { setSelectedStayForPickup(null); setSelectedPerson(null); }}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 cursor-pointer transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+
+            {pickupSuccess ? (
+              <div className="text-center py-16 flex flex-col items-center animate-in zoom-in">
+                <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                  <CheckCircle2 size={50} className="text-emerald-500" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">¡Entrega Confirmada!</h3>
+                <p className="text-slate-500 mt-2">La entrega de {selectedStayForPickup.childName} a {selectedPerson?.name} ha quedado registrada con éxito.</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-8 mt-2">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                    <ShieldCheck size={32} />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-slate-900 mb-2">Validación de Entrega</h3>
+                  <p className="text-slate-500 text-sm">Selecciona a la persona que se encuentra físicamente en la puerta recogiendo a <strong className="text-slate-800">{selectedStayForPickup.childName}</strong>.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  {mockAuthorizedPeople.map(person => (
+                    <button 
+                      key={person.id}
+                      onClick={() => setSelectedPerson(person)}
+                      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer text-left ${
+                        selectedPerson?.id === person.id 
+                        ? 'bg-indigo-50 border-indigo-500 shadow-md shadow-indigo-100 ring-1 ring-indigo-500' 
+                        : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center text-3xl border border-slate-200 shadow-sm shrink-0">
+                        {person.avatarIcon}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-base">{person.name}</p>
+                        <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider mb-1">{person.relation}</p>
+                        <p className="text-xs text-slate-500 flex items-center gap-1 font-mono">{person.idNumber}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex-1">
+                    {selectedPerson ? (
+                      <p className="text-sm font-medium text-slate-700">Entregando a: <strong className="text-indigo-600">{selectedPerson.name}</strong></p>
+                    ) : (
+                      <p className="text-sm text-slate-500">Ninguna persona seleccionada</p>
+                    )}
+                  </div>
+                  <button 
+                    onClick={handleConfirmPickup}
+                    disabled={!selectedPerson}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-indigo-200 cursor-pointer"
+                  >
+                    Confirmar Entrega
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </>
